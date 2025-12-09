@@ -38,4 +38,3 @@ This system allows teachers to mark attendance, track student records, and gener
 ---
 
 ## 📁 Project Structure
-

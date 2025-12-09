@@ -1,19 +1,29 @@
 import { useState } from 'react';
 import { Users, Lock, Mail, Eye, EyeOff, User, Phone, Building } from 'lucide-react';
+import { use } from 'react';
+import signupservice from '../Auth/services';
+import { useEffect } from 'react';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [regnumber , setregnumber] = useState('');
+  
+  // LOGIN VALIDATION ERRORS - ADD THIS
+  const [loginErrors, setLoginErrors] = useState({});
   
   // Login state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   
+
+
+
+
   // Signup state here sign up is a javascript object named signupData
   const [signupData, setSignupData] = useState({
-    
     fullName: '',
     email: '',
     phone: '',
@@ -22,7 +32,138 @@ const AuthPage = () => {
     role: 'teacher'
   });
 
+
+
+  // SIGNUP VALIDATION ERRORS - ADD THIS
+  const [signupErrors, setSignupErrors] = useState({});
+
+
+
+  // ======================== FRONTEND VALIDATION FUNCTIONS - ADD THESE ========================
+
+
+
+  // VALIDATE LOGIN FORM
+  const validateLoginForm = () => {
+
+    const errors = {};
+
+    // CHECK: Email or Registration Number is required
+    if (loginEmail.trim() === '' && regnumber.trim() === '') {
+      errors.email = 'Please enter email OR registration number';
+    }
+
+
+    // CHECK: Email format validation (if email is provided)
+    if (loginEmail.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(loginEmail)) {
+        errors.email = 'Invalid email format (example: user@domain.com)';
+      }
+    }
+
+    // CHECK: Registration Number is numeric (if provided)
+    if (regnumber.trim() !== '') {
+      if (!/^\d+$/.test(regnumber)) {
+        errors.regnumber = 'Registration number must contain only digits';
+      }
+      if (regnumber.length < 3) {
+        errors.regnumber = 'Registration number must be at least 3 digits';
+      }
+    }
+
+    // CHECK: Password is not empty
+    if (loginPassword.trim() === '') {
+      errors.password = 'Password is required';
+    }
+
+    // CHECK: Password minimum length
+    if (loginPassword.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    return errors;
+
+  };
+
+  // VALIDATE SIGNUP FORM
+  const validateSignupForm = () => {
+    const errors = {};
+
+    // CHECK: Full Name - not empty and no special characters
+    if (signupData.fullName.trim() === '') {
+      errors.fullName = 'Full name is required';
+    }
+    if (signupData.fullName.length > 50) {
+      errors.fullName = 'Full name must be less than 50 characters';
+    }
+    if (!/^[a-zA-Z\s]+$/.test(signupData.fullName)) {
+      errors.fullName = 'Full name can only contain letters and spaces';
+    }
+
+    // CHECK: Email format
+    if (signupData.email.trim() === '') {
+      errors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(signupData.email)) {
+        errors.email = 'Invalid email format (example: user@example.com)';
+      }
+    }
+
+    // CHECK: Phone - numeric and valid length
+    if (signupData.phone.trim() === '') {
+      errors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(signupData.phone)) {
+      errors.phone = 'Phone must be exactly 10 digits';
+    }
+
+
+
+    // CHECK: Password - minimum 8 chars, uppercase, number, special char
+    if (signupData.password === '') {
+      errors.password = 'Password is required';
+    } else if (signupData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    } else if (!/[A-Z]/.test(signupData.password)) {
+      errors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[0-9]/.test(signupData.password)) {
+      errors.password = 'Password must contain at least one number';
+    } else if (!/[!@#$%^&*]/.test(signupData.password)) {
+      errors.password = 'Password must contain at least one special character (!@#$%^&*)';
+    }
+
+
+
+    // CHECK: Confirm Password matches Password
+    if (signupData.confirmPassword === '') {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (signupData.password !== signupData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+
+    // CHECK: Terms accepted (you'll need to add a state for this checkbox)
+    // TODO: Add terms checkbox state and validate it here
+
+    return errors;
+
+  };
+
+
+
+  // ======================== END VALIDATION FUNCTIONS ========================
   const handleLogin = () => {
+    // ADD THIS: Validate before submitting
+    const errors = validateLoginForm();
+    setLoginErrors(errors);
+
+    // If there are errors, don't proceed
+    if (Object.keys(errors).length > 0) {
+      console.log('Login validation failed:', errors);
+      return;
+    }
+
     setIsLoading(true);
     setTimeout(() => {
       console.log('Logging in...', { loginEmail, loginPassword });
@@ -31,19 +172,81 @@ const AuthPage = () => {
   };
 
 
-  const handleSignup = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      console.log('Signing up...', signupData);
-      setIsLoading(false);
-    }, 1500);
+
+  const handleSignup =  async () => {
+    // ADD THIS: Validate before submitting
+    const errors = validateSignupForm();
+    setSignupErrors(errors);
+
+
+    // If there are errors, don't proceed
+    if (Object.keys(errors).length > 0) {
+      console.log('Signup validation failed:', errors);
+      return;
+    }
+
+    try{
+      
+        const res =   await signupservice(signupData);
+        if(!res){
+          console.log("Signup Failed");
+          alert("Signup Failed");
+        }
+
+        console.log(res);
+
+        
+        if(res){
+          alert("Signup Successfull");
+          setSignupData({
+            fullName: '',
+            email: '',
+            phone: '',
+            password: '',
+            confirmPassword: '',
+            role: 'teacher'
+          })
+          setSignupErrors({});
+        }
+
+    } catch(error){
+      console.log(error);
+    }
   };
 
 
 
   const updateSignupData = (field, value) => {
     setSignupData(prev => ({ ...prev, [field]: value }));
+    // CLEAR ERROR when user starts typing
+    if (signupErrors[field]) {
+      setSignupErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
+
+  // CLEAR LOGIN ERRORS when user types
+  const handleLoginEmailChange = (e) => {
+    setLoginEmail(e.target.value);
+    if (loginErrors.email) {
+      setLoginErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
+  const handleLoginPasswordChange = (e) => {
+    setLoginPassword(e.target.value);
+    if (loginErrors.password) {
+      setLoginErrors(prev => ({ ...prev, password: '' }));
+    }
+  };
+
+  const handleRegNumberChange = (e) => {
+    setregnumber(e.target.value);
+    if (loginErrors.regnumber) {
+      setLoginErrors(prev => ({ ...prev, regnumber: '' }));
+    }
+  };
+
+
 
 
   return (
@@ -67,7 +270,7 @@ const AuthPage = () => {
           </div>
           <div className="inline-block bg-black px-6 py-3 rounded-lg">
             <h2 className="text-xl sm:text-2xl font-bold text-white">
-              Student Attendance
+            Mark It
             </h2>
           </div>
           <p className="text-gray-600 mt-4 text-sm sm:text-base">
@@ -101,8 +304,11 @@ const AuthPage = () => {
             </button>
           </div>
 
+
+
           {/* LOGIN FORM */}
           {isLogin ? (
+
             <div className="space-y-5">
               {/* Email Input */}
               <div>
@@ -116,12 +322,50 @@ const AuthPage = () => {
                   <input
                     type="email"
                     value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    disabled={regnumber.length>0?true:false}
+                    onChange={handleLoginEmailChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                      loginErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                    }`}
                     placeholder="Enter your email"
                   />
                 </div>
+                {/* SHOW ERROR MESSAGE */}
+                {loginErrors.email && (
+                  <p className="text-red-500 text-xs mt-1">{loginErrors.email}</p>
+                )}
               </div>
+
+
+                 <div className='either font-bold text-2xl text-black  flex flex-row items-center justify-center mt-4'>
+                    <h2>OR</h2>
+                    </div>
+
+              <div>
+               <label className='block text-sm font semibold text-gray-700 mb-2'>
+                Registration Nubmber 
+               </label>
+                <div className='relative'>
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <User size={18} className="text-gray-400" />
+                  </div>
+                    <input
+                    type="text"
+                    value={regnumber}
+                    disabled={loginEmail.length>0?true:false}
+                    onChange={handleRegNumberChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                      loginErrors.regnumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                    }`}
+                    placeholder="Enter your registration number"
+                  />
+                </div>
+                {/* SHOW ERROR MESSAGE */}
+                {loginErrors.regnumber && (
+                  <p className="text-red-500 text-xs mt-1">{loginErrors.regnumber}</p>
+                )}
+               </div>
+
 
               {/* Password Input */}
               <div>
@@ -135,10 +379,13 @@ const AuthPage = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    onChange={handleLoginPasswordChange}
+                    className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                      loginErrors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                    }`}
                     placeholder="Enter your password"
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -151,6 +398,10 @@ const AuthPage = () => {
                     )}
                   </button>
                 </div>
+                {/* SHOW ERROR MESSAGE */}
+                {loginErrors.password && (
+                  <p className="text-red-500 text-xs mt-1">{loginErrors.password}</p>
+                )}
               </div>
 
               {/* Remember Me & Forgot Password */}
@@ -190,7 +441,24 @@ const AuthPage = () => {
             /* SIGNUP FORM */
             <div className="space-y-4">
               {/* Full Name Input */}
-              <div>
+              <div className="space-y-4">
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <select
+                    value={signupData.role}
+                    onChange={(e) => updateSignupData('role', e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="teacher">Teacher</option>
+                    <option value="student">Student</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Full Name
                 </label>
@@ -202,14 +470,25 @@ const AuthPage = () => {
                     type="text"
                     value={signupData.fullName}
                     onChange={(e) => updateSignupData('fullName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                      signupErrors.fullName ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                    }`}
                     placeholder="John Doe"
                   />
                 </div>
+                {/* SHOW ERROR MESSAGE */}
+                {signupErrors.fullName && (
+                  <p className="text-red-500 text-xs mt-1">{signupErrors.fullName}</p>
+                )}
               </div>
 
-              {/* Email Input */}
-              <div>
+            
+             
+
+              {/* Phone & Institution Row */}   {/* Email Input */}
+              <div className="grid grid-cols-2 gap-3">
+
+                 <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Email Address
                 </label>
@@ -221,14 +500,20 @@ const AuthPage = () => {
                     type="email"
                     value={signupData.email}
                     onChange={(e) => updateSignupData('email', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                      signupErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                    }`}
                     placeholder="john@example.com"
                   />
                 </div>
-              </div>
+                {/* SHOW ERROR MESSAGE */}
+                {signupErrors.email && (
+                  <p className="text-red-500 text-xs mt-1">{signupErrors.email}</p>
+                )}
+               </div>
 
-              {/* Phone & Institution Row */}
-              <div className="grid grid-cols-2 gap-3">
+
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Phone
@@ -241,46 +526,20 @@ const AuthPage = () => {
                       type="tel"
                       value={signupData.phone}
                       onChange={(e) => updateSignupData('phone', e.target.value)}
-                      className="w-full pl-10 pr-2 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      placeholder="123456789"
+                      className={`w-full pl-10 pr-2 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                        signupErrors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                      }`}
+                      placeholder="1234567890"
                     />
                   </div>
+                  {/* SHOW ERROR MESSAGE */}
+                  {signupErrors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{signupErrors.phone}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Role
-                  </label>
-                  <select
-                    value={signupData.role}
-                    onChange={(e) => updateSignupData('role', e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
-                  >
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
-                    <option value="student">Student</option>
-                  </select>
-                </div>
+             
               </div>
-
-              {/* Institution Input */}
-              {/* <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Institution
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Building size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={signupData.institution}
-                    onChange={(e) => updateSignupData('institution', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Your school/college name"
-                  />
-                </div>
-              </div> */}
 
               {/* Password Inputs */}
               <div className="grid grid-cols-2 gap-3">
@@ -296,7 +555,9 @@ const AuthPage = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={signupData.password}
                       onChange={(e) => updateSignupData('password', e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className={`w-full pl-10 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                        signupErrors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                      }`}
                       placeholder="••••••"
                     />
                     <button
@@ -311,6 +572,10 @@ const AuthPage = () => {
                       )}
                     </button>
                   </div>
+                  {/* SHOW ERROR MESSAGE */}
+                  {signupErrors.password && (
+                    <p className="text-red-500 text-xs mt-1">{signupErrors.password}</p>
+                  )}
                 </div>
 
                 <div>
@@ -325,7 +590,9 @@ const AuthPage = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={signupData.confirmPassword}
                       onChange={(e) => updateSignupData('confirmPassword', e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className={`w-full pl-10 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                        signupErrors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                      }`}
                       placeholder="••••••"
                     />
                     <button
@@ -340,6 +607,10 @@ const AuthPage = () => {
                       )}
                     </button>
                   </div>
+                  {/* SHOW ERROR MESSAGE */}
+                  {signupErrors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">{signupErrors.confirmPassword}</p>
+                  )}
                 </div>
               </div>
 
