@@ -8,6 +8,7 @@ import Sidebar from "./components/layout/Sidebar";
 import Teacherdashboard from "./pages/teacherdashboard/teacherdashboard";
 // import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Navbar from "./components/teachercomponents/navbar";
+import TeacherProfile from "./pages/teacherdashboard/teacherprofile";
 const App = () => {
   return (
     <BrowserRouter>
@@ -25,27 +26,28 @@ const App = () => {
           path="/dashboard"
 
           element={
-        <>
+            <>
               <Sidebar>
                 <Dashboard />
               </Sidebar>
 
-             
 
-              </>
-            
+
+            </>
+
           }
         />
 
-       <Route path="/teacher" element={<Teacherdashboard />}>
-        {/* Child routes (they appear inside <Outlet>) */}
-        <Route path="dashboard" element={<Dashboard />} />
-      </Route>
+        <Route path="/teacher" element={<Teacherdashboard />}>
+          {/* Child routes (they appear inside <Outlet>) */}
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<TeacherProfile />} />
+        </Route>
 
         <Route path="/navbar" element
-        = {<Navbar/>}></Route>
+          ={<Navbar />}></Route>
 
-    
+
       </Routes>
     </BrowserRouter>
   );
