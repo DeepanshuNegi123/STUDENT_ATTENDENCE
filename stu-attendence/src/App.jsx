@@ -6,6 +6,7 @@ import LoginPage from "./pages/Auth/LoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Teacherdashboard from "./pages/teacherdashboard/teacherdashboard";
+import TeacherProfile from "./pages/teacherdashboard/teacherprofile";
 // import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Navbar from "./components/teachercomponents/navbar";
 const App = () => {
@@ -20,32 +21,31 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         {/* <Route path="/signup" element={<SignupPage />} /> */}
 
+
         {/* Protected Dashboard */}
         <Route
           path="/dashboard"
-
           element={
-        <>
+            <>
               <Sidebar>
                 <Dashboard />
               </Sidebar>
-
-             
-
-              </>
-            
+            </>
           }
         />
 
-       <Route path="/teacher" element={<Teacherdashboard />}>
-        {/* Child routes (they appear inside <Outlet>) */}
-        <Route path="dashboard" element={<Dashboard />} />
-      </Route>
+        <Route path="/teacher" element={<Teacherdashboard />}>
+          {/* Child routes (they appear inside <Outlet>) */}
+          <Route path="dashboard" element={<Dashboard />} />
+
+          <Route path="teacherprofile" element={<TeacherProfile />}></Route>
+        </Route>
 
         <Route path="/navbar" element
-        = {<Navbar/>}></Route>
+          ={<Navbar />}></Route>
 
-    
+
+
       </Routes>
     </BrowserRouter>
   );

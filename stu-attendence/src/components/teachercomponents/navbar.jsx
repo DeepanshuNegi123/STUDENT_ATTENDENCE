@@ -1,4 +1,7 @@
+
+
 import { Search, User, Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Navbar({ toggle }) {
   return (
@@ -6,7 +9,7 @@ export default function Navbar({ toggle }) {
 
       {/* NAVBAR */}
       <nav className="flex p-5 gap-4 justify-between items-center bg-white shadow relative z-20">
-        
+
         {/* LEFT - MENU BUTTON */}
         <button onClick={toggle} className="p-2">
           <Menu />
@@ -14,7 +17,7 @@ export default function Navbar({ toggle }) {
 
         {/* RIGHT - USER ICON */}
         <div className="user flex mr-8 w-10 h-10">
-          <User />
+          <Link to='/teacher/teacherprofile'> <User /></Link>
         </div>
       </nav>
 
@@ -41,7 +44,7 @@ export default function Navbar({ toggle }) {
           </button>
         </div>
       </div>
-      
+
     </div>
   );
 }

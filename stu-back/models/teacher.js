@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-
 const teacherSchema = new mongoose.Schema({
-    
+
+  // personal information 
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -9,24 +9,9 @@ const teacherSchema = new mongoose.Schema({
     unique: true,
   },
 
-  department: {
-    type: String,
-    default: "",
-  },
-
   phone: {
     type: String,
     default: "",
-  },
-
-  qualifications: {
-    type: [String],
-    default: [],
-  },
-
-  experience: {
-    type: Number,
-    default: 0,
   },
 
   profilePicture: {
@@ -39,14 +24,23 @@ const teacherSchema = new mongoose.Schema({
     default: "",
   },
 
-  // classes will be added LATER by admin
-  assignedClasses: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Class",
-    },
-  ],
+
+
+  // professional information 
+  experience: {
+    type: Number,
+    default: 0,
+  },
+  qualifications: {
+    type: [String],
+    default: [],
+  },
+  department: {
+    type: String,
+    default: "",
+  },
 
 }, { timestamps: true });
+
 
 export default mongoose.model("Teacher", teacherSchema);
