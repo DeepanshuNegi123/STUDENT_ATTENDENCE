@@ -25,8 +25,9 @@ export default function Sidebar({ isOpen }) {
         <Link to="/teacher/dashboard" className="p-2 block hover:bg-gray-100 rounded">
           Dashboard
         </Link>
+        <Link to="/teacher/timetable" className="p-2 block hover:bg-gray-100 rounded">Timetable</Link>
+        <Link to="markattendence" className="p-2 block hover:bg-gray-100 rounded">Attendence</Link>
         <p className="p-2 hover:bg-gray-100 rounded">Students</p>
-        <p className="p-2 hover:bg-gray-100 rounded">Attendance</p>
       </div>
     </div>
   );

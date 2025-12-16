@@ -1,39 +1,39 @@
 
 
 
-const signupservice =  async (req , res)=>{
+// const signupservice =  async (req , res)=>{
 
- try{
+//  try{
 
-const signupData = req.body;
+// const signupData = req.body;
 
-const response = await fetch("http://localhost:3000/api/auth/signup" , {
+// const response = await fetch("http://localhost:3000/api/auth/signup" , {
 
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-        fullname :signupData.fullname,
-        email :signupData.email,
-        password :signupData.password,
-        phone:signupData.phone,
+//     method:"POST",
+//     headers:{"Content-Type":"application/json"},
+//     body:JSON.stringify({
+//         fullname :signupData.fullname,
+//         email :signupData.email,
+//         password :signupData.password,
+//         phone:signupData.phone,
         
-    })
+//     })
 
-})
+// })
 
-const result = await response.json();
+// const result = await response.json();
 
-if (result.success == true) {   // here i will provide a meassage of success with my json data after a successful sign up.
+// if (result.success == true) {   // here i will provide a meassage of success with my json data after a successful sign up.
  
-    window.alert ("Signup Successfull");
-}
+//     window.alert ("Signup Successfull");
+// }
 
- }
+//  }
 
- catch(error){
+//  catch(error){
 
-   console.log(error); 
+//    console.log(error); 
 
- }
+//  }
   
-}
+// }

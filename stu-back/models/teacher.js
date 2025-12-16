@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const teacherSchema = new mongoose.Schema({
-    
+
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -39,13 +39,7 @@ const teacherSchema = new mongoose.Schema({
     default: "",
   },
 
-  // classes will be added LATER by admin
-  assignedClasses: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Class",
-    },
-  ],
+
 
 }, { timestamps: true });
 

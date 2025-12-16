@@ -1,30 +1,21 @@
-import { json } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers.authorization;
 
-export   function verifytoken  (req,res,next){
-
-
-    try{
-
-const auth  = req.headers.authorization;
-if(!auth){
-    return res.send(json({message:"accepted"}));
-    
-}
-const token  = auth.split(" ")[1];
-
-jwt.verify(token,(err,user)=>{
-    if(err) return res.status(403).json({msg:"invalid token"});
-    req.user = user;
-    next();
-
-})
-}
-
-catch(err)
-    {
-res.send(json({message:"error"}));
-
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "No token provided" });
     }
-}
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = { id: decoded.id };
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+};
+
+export default authMiddleware;

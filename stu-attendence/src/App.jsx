@@ -9,9 +9,15 @@ import Teacherdashboard from "./pages/teacherdashboard/teacherdashboard";
 // import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Navbar from "./components/teachercomponents/navbar";
 import TeacherProfile from "./pages/teacherdashboard/teacherprofile";
+import TimetableApp from "./pages/teacherdashboard/timetable";
+import MarkAttendancePage from "./pages/teacherdashboard/markattendence";
+import AttendanceDashboard from "./pages/teacherdashboard/attendencedashboard";
+import ProtectedRoute from "./services/protectedroute";
+
 const App = () => {
   return (
     <BrowserRouter>
+
       <Routes>
 
         {/* Intro Page */}
@@ -22,7 +28,7 @@ const App = () => {
         {/* <Route path="/signup" element={<SignupPage />} /> */}
 
         {/* Protected Dashboard */}
-        <Route
+        {/* <Route
           path="/dashboard"
 
           element={
@@ -36,18 +42,20 @@ const App = () => {
             </>
 
           }
-        />
+        /> */}
 
-        <Route path="/teacher" element={<Teacherdashboard />}>
-          {/* Child routes (they appear inside <Outlet>) */}
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="profile" element={<TeacherProfile />} />
-        </Route>
+      <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+      <Route path="/teacher" element={<Teacherdashboard />}>
+        <Route path="dashboard" element={<AttendanceDashboard />} />
+        <Route path="profile" element={<TeacherProfile />} />
+        <Route path="timetable" element={<TimetableApp />} />
+        <Route path="markattendence" element={<MarkAttendancePage />} />
+      </Route>
+    </Route>
 
-        <Route path="/navbar" element
-          ={<Navbar />}></Route>
+        <Route path="/navbar" element ={<Navbar />}></Route>
 
-
+ <Route path="/unauthorized" element={<h1>403 - Not Allowed</h1>} />
       </Routes>
     </BrowserRouter>
   );
