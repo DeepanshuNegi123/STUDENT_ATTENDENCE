@@ -28,7 +28,7 @@ window.location.href = "/login";
         department: 'Computer Science',
         email: 'sarah.johnson@university.edu',
         phone: '+1 (555) 123-4567',
-        profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+        profileImage: '',
         bio: 'Experienced academic with 10+ years in Computer Science education. Specializing in Database Systems and Software Architecture.',
         joinedDate: 'January 2020',
         experience: 10,
@@ -57,7 +57,7 @@ window.location.href = "/login";
                 setTeacher(prev => ({
                     ...prev,
                     ...data.teacher,
-                    profileImage: data.teacher.profilePicture || prev.profileImage,
+                    // profileImage: data.teacher.profilePicture || prev.profileImage,
                 }));
             } catch (error) {
                 console.error("Failed to load teacher profile", error.message);

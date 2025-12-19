@@ -16,6 +16,7 @@ app.use(morgan("combined")); // Used morgan logger for the requests and response
 
 app.use("/api/auth", authenticate);
 app.use("/api/teacher", teacherroutes);
+// app.use("/api/admin",adminroutes);
 
 
 app.get("/", (req, res) => {

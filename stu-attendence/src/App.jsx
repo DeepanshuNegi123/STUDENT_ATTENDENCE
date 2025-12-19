@@ -13,7 +13,7 @@ import TimetableApp from "./pages/teacherdashboard/timetable";
 import MarkAttendancePage from "./pages/teacherdashboard/markattendence";
 import AttendanceDashboard from "./pages/teacherdashboard/attendencedashboard";
 import ProtectedRoute from "./services/protectedroute";
-
+import Unauthorised from "./services/unauthorised";
 const App = () => {
   return (
     <BrowserRouter>
@@ -46,16 +46,20 @@ const App = () => {
 
       <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
       <Route path="/teacher" element={<Teacherdashboard />}>
+      <Route index element={<AttendanceDashboard />} />
         <Route path="dashboard" element={<AttendanceDashboard />} />
         <Route path="profile" element={<TeacherProfile />} />
         <Route path="timetable" element={<TimetableApp />} />
-        <Route path="markattendence" element={<MarkAttendancePage />} />
+         <Route path="markattendence" element={<MarkAttendancePage />} />
       </Route>
-    </Route>
-
+      </Route>
+       
+       
         <Route path="/navbar" element ={<Navbar />}></Route>
+        <Route path="/unauthorized" element={<Unauthorised/>}></Route>
+      
 
- <Route path="/unauthorized" element={<h1>403 - Not Allowed</h1>} />
+
       </Routes>
     </BrowserRouter>
   );
