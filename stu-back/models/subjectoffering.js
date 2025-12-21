@@ -8,17 +8,18 @@ const subjectOfferingSchema = new mongoose.Schema(
       required: true,
     },
 
-    subjectId: {
+    subject: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subject",
       required: true,
     },
 
-    teacherId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher",
-      required: true,
-    },
+    teachers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Teacher",
+      },
+    ],
 
     academicYear: {
       type: String, // 2024-25

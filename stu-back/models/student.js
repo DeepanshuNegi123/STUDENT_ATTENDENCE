@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
-    // 🔐 Auth link
+    // 🔐 Auth link (ONLY REQUIRED FIELD)
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -10,34 +10,33 @@ const studentSchema = new mongoose.Schema(
       unique: true,
     },
 
-    // 🎓 Academic identity
-    Regnumber: {
-      type: Number,
-      default: "",
+    // 🎓 Academic identity (Admin fills later)
+    regNumber: {
+      type: String,
+      default: null,
     },
 
     branch: {
-      type: String, // CSE, IT, ME, etc.
-      required: true,
+      type: String, // CSE, IT, ME
+      default: null, // ❌ not required at signup
     },
 
     currentSemester: {
       type: Number,
-      required: true,
+      default: null, // ❌ not required at signup
     },
 
-    // ⚠️ TEMPORARY (will later move to Enrollment)
     className: {
-      type: String, // e.g. CSE-304
-      default: "",
+      type: String, // CSE-304
+      default: null,
     },
 
     section: {
       type: String,
-      default: "",
+      default: null,
     },
 
-    // 👨‍👩‍👧 Parent details
+    // 👨‍👩‍👧 Parent details (student fills later)
     parentName: {
       type: String,
       default: "",
@@ -53,7 +52,7 @@ const studentSchema = new mongoose.Schema(
       default: "",
     },
 
-    // 🧍 Personal info
+    // 🧍 Personal info (profile page)
     dateOfBirth: {
       type: Date,
       default: null,
@@ -69,6 +68,7 @@ const studentSchema = new mongoose.Schema(
       default: "",
     },
 
+    // 🏫 System fields
     enrollmentDate: {
       type: Date,
       default: Date.now,

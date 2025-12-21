@@ -3,7 +3,6 @@ import User from "../models/user.js";
 import SubjectOffering from "../models/subjectoffering.js";
 import Enrollment from "../models/enrollment.js";
 import Attendance from "../models/attendance.js";
-import subjectoffering from "../models/subjectoffering.js";
 
 /**
  * 👨‍🏫 Teacher Profile
@@ -17,18 +16,17 @@ export const getTeacherProfile = async (req, res) => {
       return res.status(404).json({ message: "Teacher profile not found" });
     }
 
-    const user = await User.findById(userId).select("firstName email");
+    const user = await User.findById(userId).select("fullName email phone");
 
     res.status(200).json({
       success: true,
       profile: {
-        name: user.firstName,
+        name: user.fullName,
         email: user.email,
+        phone: user.phone,
         department: teacher.department,
-        phone: teacher.phone,
         experience: teacher.experience,
         qualifications: teacher.qualifications,
-        profileImage: teacher.profilePicture,
         joinedAt: teacher.createdAt,
       },
     });
@@ -43,14 +41,22 @@ export const getTeacherProfile = async (req, res) => {
  */
 export const getTeacherOfferings = async (req, res) => {
   try {
-    const teacherId = req.user.id;
+    const userId = req.user.id;
+
+    // First find the teacher profile
+    const teacher = await Teacher.findOne({ userId });
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher profile not found" });
+    }
+
+    const teacherId = teacher._id;
 
     const offerings = await SubjectOffering.find({
       teachers: teacherId,
       isActive: true,
     })
       .populate("subject", "code name semester")
-      .populate("classes", "classCode branch semester section academicYear");
+      .populate("classId", "classCode branch semester section academicYear");
 
     res.status(200).json({
       success: true,
@@ -67,17 +73,23 @@ export const getTeacherOfferings = async (req, res) => {
  */
 export const getOfferingStudents = async (req, res) => {
   try {
-    const teacherId = req.user.id;
+    const userId = req.user.id;
     const { offeringId } = req.query;
 
     if (!offeringId) {
       return res.status(400).json({ message: "offeringId is required" });
     }
 
+    // Find teacher profile
+    const teacher = await Teacher.findOne({ userId });
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher profile not found" });
+    }
+
     // Ensure teacher is assigned
     const offering = await SubjectOffering.findOne({
       _id: offeringId,
-      teachers: teacherId,
+      teachers: teacher._id,
       isActive: true,
     });
 
@@ -94,14 +106,14 @@ export const getOfferingStudents = async (req, res) => {
       path: "student",
       populate: {
         path: "user",
-        select: "firstName email",
+        select: "fullName email",
       },
     });
 
     const students = enrollments.map((en) => ({
       enrollmentId: en._id,
       registrationNumber: en.registrationNumber,
-      name: en.student.user.firstName,
+      name: en.student.user.fullName,
       email: en.student.user.email,
     }));
 
@@ -116,57 +128,52 @@ export const getOfferingStudents = async (req, res) => {
   }
 };
 
-
-export const markAttendance = async (req , res) =>{
-
-
-
+/**
+ * 📝 Mark Attendance
+ */
+export const markAttendance = async (req, res) => {
   try {
+    const userId = req.user.id;
+    const { offeringId, date, attendance } = req.body;
 
-    const teacherId = req.user.id;
-    const {offeringId, date , attendance} = req.body;
+    if (!offeringId || !date || !attendance?.length) {
+      return res.status(400).json({
+        message: "invalid payload",
+      });
+    }
 
+    // Find teacher profile
+    const teacher = await Teacher.findOne({ userId });
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher profile not found" });
+    }
 
-    if(!offeringId || !date || !attendance?.length){
-
-return res.status(400).json({
-  message:"invalid payload"
-});
-
-}
-
-const offering = await SubjectOffering.findOne({
+    const offering = await SubjectOffering.findOne({
       _id: offeringId,
-      teachers: teacherId,
+      teachers: teacher._id,
       isActive: true,
     });
 
-   if (!offering) {
+    if (!offering) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-const records = attendance.map((item)=>({
+    const records = attendance.map((item) => ({
+      subjectOfferingId: offeringId,
+      studentId: item.studentId,
+      date,
+      status: item.status,
+      markedBy: teacher._id,
+    }));
 
-  subjectofferingId:offeringId,
-  studentId:item.studentId,
-  date,
-  status:item.status,
+    await Attendance.insertMany(records);
 
-}));
-
-
-await Attendance.insertMany(records);
-
- res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Attendance marked successfully",
     });
-
-  }
-  catch(error){
-
-     console.error(error);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
-
   }
 };
