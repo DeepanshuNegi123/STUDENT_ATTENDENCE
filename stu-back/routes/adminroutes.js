@@ -20,6 +20,11 @@ import {
   createSubjectOffering,
   getAllOfferings,
   deleteOffering,
+  // Enrollment Management
+  createEnrollment,
+  getAllEnrollments,
+  bulkEnrollStudents,
+  deleteEnrollment,
 } from "../controllers/admincontroller.js";
 
 const router = express.Router();
@@ -57,5 +62,13 @@ router.get("/subjects", adminAuth, getAllSubjects);
 router.post("/offerings", adminAuth, createSubjectOffering);
 router.get("/offerings", adminAuth, getAllOfferings);
 router.delete("/offerings/:id", adminAuth, deleteOffering);
+
+// =============================================
+// 📋 ENROLLMENT ROUTES
+// =============================================
+router.post("/enrollments", adminAuth, createEnrollment);
+router.get("/enrollments", adminAuth, getAllEnrollments);
+router.post("/enrollments/bulk", adminAuth, bulkEnrollStudents);
+router.delete("/enrollments/:id", adminAuth, deleteEnrollment);
 
 export default router;

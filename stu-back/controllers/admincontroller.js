@@ -5,7 +5,8 @@ import Class from "../models/classes.js";
 import Subject from "../models/subjects.js";
 import SubjectOffering from "../models/subjectoffering.js";
 import bcrypt from "bcrypt";
-
+import Enrollment from "../models/enrollment.js"
+ 
 // =============================================
 // 👨‍🏫 TEACHER MANAGEMENT
 // =============================================
@@ -128,7 +129,7 @@ export const deleteTeacher = async (req, res) => {
 
 export const createStudent = async (req, res) => {
   try {
-    const { fullName, email, phone, registrationNumber, classId } = req.body;
+    const { fullName, email, phone, registrationNumber, branch, section, className } = req.body;
 
     // Check if user exists
     const exist = await User.findOne({ email: email.toLowerCase() });
@@ -151,8 +152,10 @@ export const createStudent = async (req, res) => {
     // Create student profile
     const newStudent = await Student.create({
       userId: newUser._id,
-      registrationNumber: registrationNumber.trim(),
-      classId: classId || null,
+      regNumber: registrationNumber || "",
+      branch: branch || null,
+      section: section || null,
+      className: className || null,
     });
 
     res.status(201).json({
@@ -162,7 +165,7 @@ export const createStudent = async (req, res) => {
         id: newStudent._id,
         name: newUser.fullName,
         email: newUser.email,
-        registrationNumber: newStudent.registrationNumber,
+        registrationNumber: newStudent.regNumber,
       },
     });
   } catch (error) {
@@ -174,8 +177,7 @@ export const createStudent = async (req, res) => {
 export const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find()
-      .populate("userId", "fullName email phone")
-      .populate("classId", "classCode branch semester");
+      .populate("userId", "fullName email phone");
 
     res.json({
       success: true,
@@ -183,20 +185,27 @@ export const getAllStudents = async (req, res) => {
       students,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch students" });
+    console.error("Error fetching students:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch students",
+      message: error.message 
+    });
   }
 };
 
 export const assignStudentToClass = async (req, res) => {
   try {
-    const { studentId, classId } = req.body;
+    const { studentId, branch, section, className } = req.body;
 
     const updatedStudent = await Student.findByIdAndUpdate(
       studentId,
-      { classId },
+      { 
+        branch,
+        section,
+        className,
+      },
       { new: true }
-    ).populate("userId", "fullName email").populate("classId", "classCode branch");
+    ).populate("userId", "fullName email");
 
     if (!updatedStudent) {
       return res.status(404).json({ error: "Student not found" });
@@ -369,3 +378,166 @@ export const deleteOffering = async (req, res) => {
   }
 };
 
+// =============================================
+// 📋 ENROLLMENT MANAGEMENT
+// =============================================
+
+export const createEnrollment = async (req, res) => {
+  try {
+    const { studentId, offeringId, academicYear } = req.body;
+
+    if (!studentId || !offeringId || !academicYear) {
+      return res.status(400).json({ 
+        error: "studentId, offeringId, and academicYear are required" 
+      });
+    }
+
+    // Get student to get registration number
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    // Check if offering exists
+    const offering = await SubjectOffering.findById(offeringId);
+    if (!offering) {
+      return res.status(404).json({ error: "Subject offering not found" });
+    }
+
+    // Use regNumber or generate one if null
+    const registrationNumber = student.regNumber || `STU-${studentId.slice(-6)}`;
+
+    // Create enrollment
+    const enrollment = await Enrollment.create({
+      student: studentId,
+      subjectOffering: offeringId,
+      registrationNumber: registrationNumber,
+      academicYear,
+      isActive: true,
+    });
+
+    const populated = await enrollment.populate([
+      { path: "student" },
+      { path: "subjectOffering" },
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: "Student enrolled successfully",
+      enrollment: populated,
+    });
+  } catch (error) {
+    console.error(error);
+    // Handle duplicate enrollment
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        error: "Student already enrolled in this subject offering" 
+      });
+    }
+    res.status(500).json({ error: "Failed to create enrollment", details: error.message });
+  }
+};
+
+export const getAllEnrollments = async (req, res) => {
+  try {
+    const { offeringId } = req.query;
+
+    let query = {};
+    if (offeringId) {
+      query.subjectOffering = offeringId;
+    }
+
+    const enrollments = await Enrollment.find(query)
+      .populate({
+        path: "student",
+        populate: {
+          path: "userId",
+          select: "fullName email phone",
+        },
+      })
+      .populate("subjectOffering");
+
+    res.json({
+      success: true,
+      count: enrollments.length,
+      enrollments,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch enrollments" });
+  }
+};
+
+export const bulkEnrollStudents = async (req, res) => {
+  try {
+    const { offeringId, studentIds, academicYear } = req.body;
+
+    if (!offeringId || !studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ 
+        error: "offeringId, studentIds (array), and academicYear are required" 
+      });
+    }
+
+    // Verify offering exists
+    const offering = await SubjectOffering.findById(offeringId);
+    if (!offering) {
+      return res.status(404).json({ error: "Subject offering not found" });
+    }
+
+    // Get all students to get their registration numbers
+    const students = await Student.find({ _id: { $in: studentIds } });
+    if (students.length !== studentIds.length) {
+      return res.status(400).json({ error: "Some students not found" });
+    }
+
+    // Create enrollments with generated regNumbers if null
+    const enrollmentData = students.map((student) => ({
+      student: student._id,
+      subjectOffering: offeringId,
+      registrationNumber: student.regNumber || `STU-${student._id.toString().slice(-6)}`,
+      academicYear,
+      isActive: true,
+    }));
+
+    const enrollments = await Enrollment.insertMany(enrollmentData, { 
+      ordered: false 
+    }).catch((err) => {
+      // Continue with successful inserts even if some fail
+      if (err.code === 11000) {
+        console.log("Some enrollments already exist (duplicates skipped)");
+        return err.insertedDocs || [];
+      }
+      throw err;
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `${enrollments.length} students enrolled successfully`,
+      enrolledCount: enrollments.length,
+      enrollments,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to bulk enroll students" });
+  }
+};
+
+export const deleteEnrollment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Enrollment.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Enrollment not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Student unenrolled successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete enrollment" });
+  }
+};
