@@ -173,8 +173,11 @@ const AuthPage = () => {
     
       if (data.user.role === "teacher") {
         navigate("/teacher/profile");
-      } else {
-        navigate("/");
+      } else if(data.user.role ==="admin"){
+        navigate("/admin");
+      }
+      else{
+        navigate('/')
       }
 
     } catch (err) {
