@@ -131,11 +131,13 @@ export const createStudent = async (req, res) => {
   try {
     const { fullName, email, phone, registrationNumber, branch, section, className } = req.body;
 
+    
     // Check if user exists
     const exist = await User.findOne({ email: email.toLowerCase() });
     if (exist) {
       return res.status(400).json({ error: "Email already exists" });
     }
+
 
     // Create user
     const salt = await bcrypt.genSalt(10);

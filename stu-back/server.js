@@ -6,7 +6,7 @@ import app from "./app.js"; // Import the app
 
 dotenv.config();
 
-app.use(cors());
+app.use(cors());   // 
 app.use(express.json());
 
 const PORT = process.env.PORT || 5008;
@@ -24,6 +24,8 @@ const connect = async () => {
         console.log(error);
     }
 }
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

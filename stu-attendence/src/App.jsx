@@ -22,6 +22,16 @@ import ManageSubjects from "./pages/admin/ManageSubjects";
 import ManageOfferings from "./pages/admin/ManageOfferings";
 import ManageEnrollments from "./pages/admin/ManageEnrollments";
 
+// Import Student Components
+import StudentDashboardLayout from "./components/students/studentdashboardlayout";
+import StudentDashboard from "./components/students/studentdashboard";
+import StudentCourses from "./pages/studentdashboard/studentcourses";
+import StudentAttendance from "./pages/studentdashboard/studentattendance";
+import StudentGrades from "./pages/studentdashboard/studentgrades";
+import StudentSchedule from "./pages/studentdashboard/studentschedule";
+import StudentProfile from "./pages/studentdashboard/studentprofile";
+
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -56,8 +66,20 @@ const App = () => {
           </Route>
         </Route>
 
-        {/* Navbar Test Route */}
-        <Route path="/navbar" element={<Navbar />} />
+
+
+        {/* Protected Student Routes */}
+       
+          <Route path="/student" element={<StudentDashboardLayout />}>
+            <Route index element={<StudentDashboard />} />
+            <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="courses" element={<StudentCourses />} />
+            <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="grades" element={<StudentGrades />} />
+            <Route path="schedule" element={<StudentSchedule />} />
+            <Route path="profile" element={<StudentProfile />} />
+          </Route>
+        
 
         {/* Unauthorized Page */}
         <Route path="/unauthorized" element={<Unauthorised />} />
@@ -66,4 +88,5 @@ const App = () => {
   );
 };
 
-export default App;
+
+export default App
