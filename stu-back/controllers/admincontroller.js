@@ -139,6 +139,7 @@ export const createStudent = async (req, res) => {
     }
 
 
+    
     // Create user
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash("Student@123", salt);
