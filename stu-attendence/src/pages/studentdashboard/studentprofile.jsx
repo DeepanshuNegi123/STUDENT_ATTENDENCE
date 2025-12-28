@@ -3,60 +3,120 @@ import { Edit2, Save, X, Mail, Phone, MapPin, Calendar, User, BookOpen, Award, E
 
 const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [originalData, setOriginalData] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  // Mock student data
-  const mockStudentData = {
-    personalInfo: {
-      fullName: "Piyush Raj",
-      email: "piyush@gmail.com",
-      phone: "1234567890",
-      dateOfBirth: "2003-05-15",
-      gender: "Male",
-      nationality: "Indian",
-      bloodGroup: "O+",
-      profileImage: "https://via.placeholder.com/150?text=Piyush",
-    },
-    academicInfo: {
-      registrationNumber: "reg1244",
-      branch: "Computer Science",
-      semester: 5,
-      section: "A",
-      currentSGPA: 8.45,
-      cumulativeGPA: 8.32,
-      totalCredits: 15,
-    },
-    parentInfo: {
-      parentName: "Raj Kumar",
-      parentPhone: "9876543210",
-      parentEmail: "rajkumar@gmail.com",
-      parentOccupation: "Business",
-    },
-    addressInfo: {
-      permanentAddress: "123 Main Street, New Delhi, India",
-      currentAddress: "456 College Road, Delhi University, New Delhi",
-      pincode: "110007",
-      city: "New Delhi",
-      state: "Delhi",
-    },
-  };
+  const API_BASE_URL = "http://localhost:5008/api";
+  const token = localStorage.getItem("token"); // JWT token from login
+
+  // Fetch student profile from backend
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFormData(mockStudentData);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchStudentProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  if (loading || !formData) {
+        const response = await fetch(`${API_BASE_URL}/student/profile`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch profile: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+
+        // Transform backend data to match frontend structure
+        const transformedData = {
+          personalInfo: {
+            fullName: data.name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            dateOfBirth: data.dateOfBirth || "",
+            gender: data.gender || "Not specified",
+            nationality: data.nationality || "Indian",
+            bloodGroup: data.bloodGroup || "Not specified",
+            profileImage: data.profileImage || "https://via.placeholder.com/150?text=Student",
+          },
+          academicInfo: {
+            registrationNumber: data.regNumber || "",
+            branch: data.branch || "",
+            semester: data.semester || 1,
+            section: data.section || "",
+            currentSGPA: data.currentSGPA || 0,
+            cumulativeGPA: data.cumulativeGPA || 0,
+            totalCredits: data.totalCredits || 0,
+          },
+          parentInfo: {
+            parentName: data.parentName || "",
+            parentPhone: data.parentPhone || "",
+            parentEmail: data.parentEmail || "",
+            parentOccupation: data.parentOccupation || "",
+          },
+          addressInfo: {
+            permanentAddress: data.permanentAddress || "",
+            currentAddress: data.address || "",
+            pincode: data.pincode || "",
+            city: data.city || "",
+            state: data.state || "",
+          },
+        };
+
+        setFormData(transformedData);
+        setOriginalData(transformedData);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError(err.message || "Failed to load profile");
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchStudentProfile();
+    } else {
+      setError("No authentication token found. Please login first.");
+      setLoading(false);
+    }
+  }, [token]);
+
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <p>Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!formData) {
+    return <div>No profile data available</div>;
   }
 
   const handleInputChange = (section, field, value) => {
@@ -69,19 +129,65 @@ const StudentProfile = () => {
     });
   };
 
-  const handleSave = () => {
-    console.log("Profile updated:", formData);
-    setIsEditing(false);
-    alert("Profile updated successfully!");
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Prepare data to send to backend
+      const updateData = {
+        name: formData.personalInfo.fullName,
+        email: formData.personalInfo.email,
+        phone: formData.personalInfo.phone,
+        dateOfBirth: formData.personalInfo.dateOfBirth,
+        parentName: formData.parentInfo.parentName,
+        parentPhone: formData.parentInfo.parentPhone,
+        parentEmail: formData.parentInfo.parentEmail,
+        address: formData.addressInfo.currentAddress,
+        city: formData.addressInfo.city,
+        state: formData.addressInfo.state,
+        pincode: formData.addressInfo.pincode,
+      };
+
+      const response = await fetch(`${API_BASE_URL}/student/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update profile: ${response.statusText}`);
+      }
+
+      setOriginalData(formData);
+      setIsEditing(false);
+      setSaving(false);
+      alert("Profile updated successfully!");
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      setError(err.message || "Failed to save profile");
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setFormData(mockStudentData);
+    setFormData(originalData);
     setIsEditing(false);
+    setError(null);
   };
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg p-6">
         <div className="flex justify-between items-start">
@@ -200,7 +306,7 @@ const StudentProfile = () => {
           {/* Branch */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
-            <p className="text-gray-800 font-medium">{formData.academicInfo.branch}</p>
+            <p className="text-gray-800 font-medium">{formData.academicInfo.branch || "N/A"}</p>
           </div>
 
           {/* Semester */}
@@ -212,7 +318,7 @@ const StudentProfile = () => {
           {/* Section */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
-            <p className="text-gray-800 font-medium">{formData.academicInfo.section}</p>
+            <p className="text-gray-800 font-medium">{formData.academicInfo.section || "N/A"}</p>
           </div>
 
           {/* Current SGPA */}
@@ -298,7 +404,7 @@ const StudentProfile = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             ) : (
-              <p className="text-gray-800">{formData.parentInfo.parentName}</p>
+              <p className="text-gray-800">{formData.parentInfo.parentName || "N/A"}</p>
             )}
           </div>
 
@@ -313,7 +419,7 @@ const StudentProfile = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             ) : (
-              <p className="text-gray-800">{formData.parentInfo.parentOccupation}</p>
+              <p className="text-gray-800">{formData.parentInfo.parentOccupation || "N/A"}</p>
             )}
           </div>
 
@@ -328,7 +434,7 @@ const StudentProfile = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             ) : (
-              <p className="text-gray-800">{formData.parentInfo.parentPhone}</p>
+              <p className="text-gray-800">{formData.parentInfo.parentPhone || "N/A"}</p>
             )}
           </div>
 
@@ -343,7 +449,7 @@ const StudentProfile = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             ) : (
-              <p className="text-gray-800">{formData.parentInfo.parentEmail}</p>
+              <p className="text-gray-800">{formData.parentInfo.parentEmail || "N/A"}</p>
             )}
           </div>
         </div>
@@ -367,22 +473,7 @@ const StudentProfile = () => {
                 rows="2"
               />
             ) : (
-              <p className="text-gray-800">{formData.addressInfo.currentAddress}</p>
-            )}
-          </div>
-
-          {/* Permanent Address */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Permanent Address</label>
-            {isEditing ? (
-              <textarea
-                value={formData.addressInfo.permanentAddress}
-                onChange={(e) => handleInputChange("addressInfo", "permanentAddress", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows="2"
-              />
-            ) : (
-              <p className="text-gray-800">{formData.addressInfo.permanentAddress}</p>
+              <p className="text-gray-800">{formData.addressInfo.currentAddress || "N/A"}</p>
             )}
           </div>
 
@@ -398,7 +489,7 @@ const StudentProfile = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               ) : (
-                <p className="text-gray-800">{formData.addressInfo.city}</p>
+                <p className="text-gray-800">{formData.addressInfo.city || "N/A"}</p>
               )}
             </div>
 
@@ -412,7 +503,7 @@ const StudentProfile = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               ) : (
-                <p className="text-gray-800">{formData.addressInfo.state}</p>
+                <p className="text-gray-800">{formData.addressInfo.state || "N/A"}</p>
               )}
             </div>
 
@@ -426,7 +517,7 @@ const StudentProfile = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               ) : (
-                <p className="text-gray-800">{formData.addressInfo.pincode}</p>
+                <p className="text-gray-800">{formData.addressInfo.pincode || "N/A"}</p>
               )}
             </div>
           </div>
@@ -444,10 +535,20 @@ const StudentProfile = () => {
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
+            disabled={saving}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={20} />
-            Save Changes
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={20} />
+                Save Changes
+              </>
+            )}
           </button>
         </div>
       )}

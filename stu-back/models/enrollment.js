@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const enrollmentSchema = new mongoose.Schema(
+  
   {
     student: {
       type: mongoose.Schema.Types.ObjectId,

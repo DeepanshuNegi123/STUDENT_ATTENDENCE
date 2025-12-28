@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, X, Trash2, Users } from "lucide-react";
+import { Plus, X, Trash2, Users, AlertCircle, CheckCircle } from "lucide-react";
 
 const ManageEnrollments = () => {
   const [offerings, setOfferings] = useState([]);
@@ -10,6 +10,8 @@ const ManageEnrollments = () => {
   const [selectedOffering, setSelectedOffering] = useState(null);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [academicYear, setAcademicYear] = useState("2024-25");
+  const [enrollmentStatus, setEnrollmentStatus] = useState(null);
+  const [offeringDetails, setOfferingDetails] = useState(null);
 
   const API_URL = "http://localhost:5008/api/admin";
   const getAuthHeader = () => ({
@@ -30,16 +32,24 @@ const ManageEnrollments = () => {
         fetch(`${API_URL}/enrollments`, { headers: getAuthHeader() }),
       ]);
 
+      if (!offeringsRes.ok || !studentsRes.ok || !enrollmentsRes.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
       const offeringsData = await offeringsRes.json();
       const studentsData = await studentsRes.json();
       const enrollmentsData = await enrollmentsRes.json();
+
+      console.log("Offerings:", offeringsData);
+      console.log("Students:", studentsData);
+      console.log("Enrollments:", enrollmentsData);
 
       setOfferings(offeringsData.offerings || []);
       setStudents(studentsData.students || []);
       setEnrollments(enrollmentsData.enrollments || []);
     } catch (error) {
       console.error("Error fetching data:", error);
-      alert("Failed to fetch data");
+      alert("Failed to fetch data: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -55,7 +65,15 @@ const ManageEnrollments = () => {
       return;
     }
 
+    setEnrollmentStatus({ loading: true, message: "Enrolling students..." });
+
     try {
+      console.log("Enrolling with data:", {
+        offeringId: selectedOffering,
+        studentIds: selectedStudents,
+        academicYear,
+      });
+
       const response = await fetch(`${API_URL}/enrollments/bulk`, {
         method: "POST",
         headers: getAuthHeader(),
@@ -66,17 +84,35 @@ const ManageEnrollments = () => {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to enroll students");
-
       const data = await response.json();
-      alert(data.message || "Students enrolled successfully!");
-      setShowModal(false);
-      setSelectedOffering(null);
-      setSelectedStudents([]);
-      fetchData();
+      console.log("Response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to enroll students");
+      }
+
+      setEnrollmentStatus({
+        loading: false,
+        success: true,
+        message: `Successfully enrolled ${data.enrolledCount || selectedStudents.length} students!`,
+        details: data,
+      });
+
+      // Auto-close after 3 seconds
+      setTimeout(() => {
+        setShowModal(false);
+        setSelectedOffering(null);
+        setSelectedStudents([]);
+        setEnrollmentStatus(null);
+        fetchData();
+      }, 3000);
     } catch (error) {
       console.error("Error enrolling students:", error);
-      alert("Failed to enroll students: " + error.message);
+      setEnrollmentStatus({
+        loading: false,
+        success: false,
+        message: `Error: ${error.message}`,
+      });
     }
   };
 
@@ -113,6 +149,19 @@ const ManageEnrollments = () => {
 
   const getStudentName = (enrollment) => {
     return enrollment.student?.userId?.fullName || "Unknown";
+  };
+
+  const getStudentDisplayName = (student) => {
+    return student.userId?.fullName || student.fullName || "Unknown";
+  };
+
+  const handleOfferingChange = (e) => {
+    const offeringId = e.target.value;
+    setSelectedOffering(offeringId);
+    
+    // Find and display offering details
+    const offering = offerings.find((o) => o._id === offeringId);
+    setOfferingDetails(offering);
   };
 
   if (loading) {
@@ -213,12 +262,41 @@ const ManageEnrollments = () => {
                   setShowModal(false);
                   setSelectedOffering(null);
                   setSelectedStudents([]);
+                  setEnrollmentStatus(null);
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X size={24} />
               </button>
             </div>
+
+            {enrollmentStatus && (
+              <div
+                className={`mb-4 p-4 rounded-lg flex items-start gap-3 ${
+                  enrollmentStatus.success
+                    ? "bg-green-50 border border-green-200"
+                    : "bg-red-50 border border-red-200"
+                }`}
+              >
+                {enrollmentStatus.success ? (
+                  <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
+                ) : (
+                  <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+                )}
+                <div>
+                  <p
+                    className={`font-medium ${
+                      enrollmentStatus.success ? "text-green-800" : "text-red-800"
+                    }`}
+                  >
+                    {enrollmentStatus.message}
+                  </p>
+                  {enrollmentStatus.loading && (
+                    <p className="text-sm text-gray-600 mt-1">Please wait...</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
@@ -227,7 +305,7 @@ const ManageEnrollments = () => {
                 </label>
                 <select
                   value={selectedOffering || ""}
-                  onChange={(e) => setSelectedOffering(e.target.value)}
+                  onChange={handleOfferingChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Choose Course</option>
@@ -237,6 +315,12 @@ const ManageEnrollments = () => {
                     </option>
                   ))}
                 </select>
+                {offeringDetails && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Subject Code: {offeringDetails.subject?.code} | Class:{" "}
+                    {offeringDetails.classId?.classCode}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -273,7 +357,7 @@ const ManageEnrollments = () => {
                         />
                         <label className="ml-3 flex-1 cursor-pointer">
                           <span className="text-sm font-medium text-gray-900">
-                            {student.userId?.fullName || "Unknown"}
+                            {getStudentDisplayName(student)}
                           </span>
                           <span className="ml-2 text-xs text-gray-500">
                             {student.regNumber || "No Reg"}
@@ -291,16 +375,23 @@ const ManageEnrollments = () => {
                     setShowModal(false);
                     setSelectedOffering(null);
                     setSelectedStudents([]);
+                    setEnrollmentStatus(null);
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  disabled={enrollmentStatus?.loading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEnrollStudents}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                  disabled={
+                    !selectedOffering ||
+                    selectedStudents.length === 0 ||
+                    enrollmentStatus?.loading
+                  }
                 >
-                  Enroll Students
+                  {enrollmentStatus?.loading ? "Enrolling..." : "Enroll Students"}
                 </button>
               </div>
             </div>

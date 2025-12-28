@@ -46,13 +46,13 @@ const AuthPage = () => {
 
     const errors = {};
 
-    // CHECK: Email or Registration Number is required
+   
     if (loginEmail.trim() === '' && regnumber.trim() === '') {
       errors.email = 'Please enter email OR registration number';
     }
 
 
-    // CHECK: Email format validation (if email is provided)
+  
     if (loginEmail.trim() !== '') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(loginEmail)) {
@@ -60,7 +60,7 @@ const AuthPage = () => {
       }
     }
 
-    // CHECK: Registration Number is numeric (if provided)
+    
     if (regnumber.trim() !== '') {
       if (!/^\d+$/.test(regnumber)) {
         errors.regnumber = 'Registration number must contain only digits';
@@ -70,7 +70,7 @@ const AuthPage = () => {
       }
     }
 
-    // CHECK: Password is not empty
+   
     if (loginPassword.trim() === '') {
       errors.password = 'Password is required';
     }
@@ -88,7 +88,7 @@ const AuthPage = () => {
   const validateSignupForm = () => {
     const errors = {};
 
-    // CHECK: Full Name - not empty and no special characters
+ 
     if (signupData.fullName.trim() === '') {
       errors.fullName = 'Full name is required';
     }
@@ -99,7 +99,7 @@ const AuthPage = () => {
       errors.fullName = 'Full name can only contain letters and spaces';
     }
 
-    // CHECK: Email format
+    
     if (signupData.email.trim() === '') {
       errors.email = 'Email is required';
     } else {
@@ -109,7 +109,7 @@ const AuthPage = () => {
       }
     }
 
-    // CHECK: Phone - numeric and valid length
+    
     if (signupData.phone.trim() === '') {
       errors.phone = 'Phone number is required';
     } else if (!/^\d{10}$/.test(signupData.phone)) {
@@ -118,7 +118,7 @@ const AuthPage = () => {
 
 
 
-    // CHECK: Password - minimum 8 chars, uppercase, number, special char
+
     if (signupData.password === '') {
       errors.password = 'Password is required';
     } else if (signupData.password.length < 8) {

@@ -69,7 +69,7 @@ const App = () => {
 
 
         {/* Protected Student Routes */}
-       
+     <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
           <Route path="/student" element={<StudentDashboardLayout />}>
             <Route index element={<StudentDashboard />} />
             <Route path="dashboard" element={<StudentDashboard />} />
@@ -78,6 +78,7 @@ const App = () => {
             <Route path="grades" element={<StudentGrades />} />
             <Route path="schedule" element={<StudentSchedule />} />
             <Route path="profile" element={<StudentProfile />} />
+          </Route>
           </Route>
         
 

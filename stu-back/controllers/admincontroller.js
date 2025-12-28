@@ -312,6 +312,8 @@ export const getAllSubjects = async (req, res) => {
 // 🎯 SUBJECT OFFERING (Teacher Assignment)
 // =============================================
 
+// Replace your createSubjectOffering with this:
+
 export const createSubjectOffering = async (req, res) => {
   try {
     const { classId, subject, teacherId, academicYear, semester } = req.body;
@@ -319,10 +321,10 @@ export const createSubjectOffering = async (req, res) => {
     const newOffering = await SubjectOffering.create({
       classId,
       subject,
-      teachers: [teacherId], // Store as array
+      teachers: [teacherId],
       academicYear,
       semester,
-      isActive: true,
+      isActive: true,  
     });
 
     const populated = await newOffering.populate([
@@ -344,7 +346,7 @@ export const createSubjectOffering = async (req, res) => {
 
 export const getAllOfferings = async (req, res) => {
   try {
-    const offerings = await SubjectOffering.find({ isActive: true })
+    const offerings = await SubjectOffering.find()
       .populate("classId", "classCode branch semester")
       .populate("subject", "code name credits")
       .populate("teachers", "userId");
@@ -440,39 +442,13 @@ export const createEnrollment = async (req, res) => {
   }
 };
 
-export const getAllEnrollments = async (req, res) => {
-  try {
-    const { offeringId } = req.query;
-
-    let query = {};
-    if (offeringId) {
-      query.subjectOffering = offeringId;
-    }
-
-    const enrollments = await Enrollment.find(query)
-      .populate({
-        path: "student",
-        populate: {
-          path: "userId",
-          select: "fullName email phone",
-        },
-      })
-      .populate("subjectOffering");
-
-    res.json({
-      success: true,
-      count: enrollments.length,
-      enrollments,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch enrollments" });
-  }
-};
+// Enhanced enrollment functions with better error handling
 
 export const bulkEnrollStudents = async (req, res) => {
   try {
     const { offeringId, studentIds, academicYear } = req.body;
+
+    console.log("Bulk enrollment request:", { offeringId, studentIds, academicYear });
 
     if (!offeringId || !studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
       return res.status(400).json({ 
@@ -501,26 +477,103 @@ export const bulkEnrollStudents = async (req, res) => {
       isActive: true,
     }));
 
-    const enrollments = await Enrollment.insertMany(enrollmentData, { 
-      ordered: false 
-    }).catch((err) => {
-      // Continue with successful inserts even if some fail
-      if (err.code === 11000) {
-        console.log("Some enrollments already exist (duplicates skipped)");
-        return err.insertedDocs || [];
+    console.log("Enrolling students:", enrollmentData);
+
+    let successCount = 0;
+    let failedEnrollments = [];
+
+    // Insert one by one to catch individual failures
+    for (const enrollData of enrollmentData) {
+      try {
+        const existing = await Enrollment.findOne({
+          student: enrollData.student,
+          subjectOffering: enrollData.subjectOffering,
+          academicYear: enrollData.academicYear,
+        });
+
+        if (existing) {
+          failedEnrollments.push({
+            studentId: enrollData.student,
+            reason: "Already enrolled in this course",
+          });
+          continue;
+        }
+
+        await Enrollment.create(enrollData);
+        successCount++;
+      } catch (err) {
+        console.error("Error enrolling single student:", err);
+        failedEnrollments.push({
+          studentId: enrollData.student,
+          reason: err.message,
+        });
       }
-      throw err;
-    });
+    }
+
+    if (successCount === 0) {
+      return res.status(400).json({
+        error: "No students were enrolled",
+        details: failedEnrollments,
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: `${enrollments.length} students enrolled successfully`,
-      enrolledCount: enrollments.length,
+      message: `${successCount} student(s) enrolled successfully${
+        failedEnrollments.length > 0 ? `. ${failedEnrollments.length} enrollment(s) failed.` : ""
+      }`,
+      enrolledCount: successCount,
+      failedCount: failedEnrollments.length,
+      failedEnrollments: failedEnrollments.length > 0 ? failedEnrollments : undefined,
+    });
+  } catch (error) {
+    console.error("Error in bulk enrollment:", error);
+    res.status(500).json({ 
+      error: "Failed to bulk enroll students",
+      details: error.message,
+    });
+  }
+};
+
+export const getAllEnrollments = async (req, res) => {
+  try {
+    const { offeringId } = req.query;
+
+    let query = { isActive: true };
+    if (offeringId) {
+      query.subjectOffering = offeringId;
+    }
+
+    const enrollments = await Enrollment.find(query)
+      .populate({
+        path: "student",
+        populate: {
+          path: "userId",
+          select: "fullName email phone",
+        },
+      })
+      .populate({
+        path: "subjectOffering",
+        populate: [
+          { path: "classId", select: "classCode branch semester" },
+          { path: "subject", select: "code name credits" },
+        ],
+      })
+      .lean();
+
+    console.log("Enrollments fetched:", enrollments.length);
+
+    res.json({
+      success: true,
+      count: enrollments.length,
       enrollments,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to bulk enroll students" });
+    console.error("Error fetching enrollments:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch enrollments",
+      details: error.message,
+    });
   }
 };
 

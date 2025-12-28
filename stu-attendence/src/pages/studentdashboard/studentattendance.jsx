@@ -6,6 +6,8 @@ const StudentAttendance = () => {
   const [loading, setLoading] = useState(true);
   const [filterCourse, setFilterCourse] = useState("");
 
+
+
   // Mock attendance data
   const mockAttendanceBySubject = [
     { subject: "Data Structures", attended: 34, total: 40, percentage: 85 },
@@ -13,6 +15,8 @@ const StudentAttendance = () => {
     { subject: "Database Systems", attended: 31, total: 40, percentage: 78 },
     { subject: "System Design", attended: 38, total: 40, percentage: 95 },
   ];
+
+
 
   const mockAttendanceTrend = [
     { week: "Week 1", percentage: 80 },
@@ -22,6 +26,8 @@ const StudentAttendance = () => {
     { week: "Week 5", percentage: 90 },
     { week: "Week 6", percentage: 87 },
   ];
+
+
 
   const mockClassAttendance = [
     { id: 1, date: "2025-01-10", subject: "Data Structures", status: "Present", time: "10:15 AM", remarks: "On time" },
@@ -34,6 +40,8 @@ const StudentAttendance = () => {
     { id: 8, date: "2025-01-01", subject: "System Design", status: "Absent", time: "-", remarks: "Medical leave" },
   ];
 
+
+
   const pieData = [
     { name: "Present", value: 32 },
     { name: "Absent", value: 5 },
@@ -42,6 +50,7 @@ const StudentAttendance = () => {
 
   const COLORS = ['#10b981', '#ef4444', '#f59e0b'];
 
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -49,6 +58,7 @@ const StudentAttendance = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -67,6 +77,7 @@ const StudentAttendance = () => {
     ? mockAttendanceBySubject.filter(item => item.subject === filterCourse)
     : mockAttendanceBySubject;
 
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -74,6 +85,7 @@ const StudentAttendance = () => {
         <h1 className="text-3xl font-bold mb-2">Attendance Tracker</h1>
         <p className="text-green-100">Monitor your attendance across all courses</p>
       </div>
+
 
       {/* Overall Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -130,6 +142,7 @@ const StudentAttendance = () => {
         </div>
       </div>
 
+
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Attendance by Subject */}
@@ -145,6 +158,8 @@ const StudentAttendance = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
+
+
 
         {/* Attendance Summary Pie Chart */}
         <div className="bg-white rounded-lg shadow p-6">
@@ -171,6 +186,8 @@ const StudentAttendance = () => {
         </div>
       </div>
 
+
+
       {/* Attendance Trend */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Weekly Attendance Trend</h2>
@@ -192,6 +209,9 @@ const StudentAttendance = () => {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+
+
 
       {/* Attendance by Subject Table */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
@@ -249,6 +269,8 @@ const StudentAttendance = () => {
           </tbody>
         </table>
       </div>
+
+
 
       {/* Detailed Class-wise Attendance */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
