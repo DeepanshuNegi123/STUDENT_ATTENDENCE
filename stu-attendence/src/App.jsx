@@ -278,166 +278,88 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Teacherdashboard from "./pages/teacherdashboard/teacherdashboard";
 import Navbar from "./components/teachercomponents/navbar";
+import TeacherProfile from "./pages/teacherdashboard/teacherprofile";
+import TimetableApp from "./pages/teacherdashboard/timetable";
+import MarkAttendancePage from "./pages/teacherdashboard/markattendence";
+import AttendanceDashboard from "./pages/teacherdashboard/attendencedashboard";
+import ProtectedRoute from "./services/protectedroute";
+import Unauthorised from "./services/unauthorised";
 
-// Student dashboard layout (from pbranch)
-import PbranchLayout from "../pbranch/App.jsx";
+// Import Admin Components
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageTeachers from "./pages/admin/ManageTeachers";
+import ManageStudents from "./pages/admin/ManageStudents";
+import ManageClasses from "./pages/admin/ManageClasses";
+import ManageSubjects from "./pages/admin/ManageSubjects";
+import ManageOfferings from "./pages/admin/ManageOfferings";
+import ManageEnrollments from "./pages/admin/ManageEnrollments";
 
-// Student dashboard pages
-import DashboardHome from "../pbranch/pages/DashboardHome";
-import StudentProfile from "../pbranch/pages/StudentProfile";
-import AttendanceOverview from "../pbranch/pages/AttendanceOverview";
-import SubjectWiseAttendance from "../pbranch/pages/SubjectWiseAttendance";
-import RecentLogsPage from "../pbranch/pages/RecentLogsPage";
-import NotificationsPage from "../pbranch/pages/NotificationsPage";
-import LeaveRequestsPage from "../pbranch/pages/LeaveRequestsPage";
-import SettingsPage from "../pbranch/pages/SettingsPage";
-
-// Charts pages
-import AttendanceChartsLayout from "../pbranch/pages/AttendanceChartsLayout";
-import SubjectChartsPage from "../pbranch/pages/SubjectChartsPage";
-import DistributionChartsPage from "../pbranch/pages/DistributionChartsPage";
-import TrendChartsPage from "../pbranch/pages/TrendChartsPage";
-import FeedbackPage from "../pbranch/pages/FeedbackPage";
+// Import Student Components
+import StudentDashboardLayout from "./components/students/studentdashboardlayout";
+import StudentDashboard from "./components/students/studentdashboard";
+import StudentCourses from "./pages/studentdashboard/studentcourses";
+import StudentAttendance from "./pages/studentdashboard/studentattendance";
+import StudentGrades from "./pages/studentdashboard/studentgrades";
+import StudentSchedule from "./pages/studentdashboard/studentschedule";
+import StudentProfile from "./pages/studentdashboard/studentprofile";
 
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Intro */}
+        {/* Intro Page */}
         <Route path="/" element={<Introslides />} />
 
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Existing app dashboards */}
-        <Route
-          path="/dashboard"
-          element={
-            <Sidebar>
-              <Dashboard />
-            </Sidebar>
-          }
-        />
-
-        <Route path="/teacher" element={<Teacherdashboard />}>
-          <Route path="dashboard" element={<Dashboard />} />
+        {/* Protected Teacher Routes */}
+        <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+          <Route path="/teacher" element={<Teacherdashboard />}>
+            <Route index element={<AttendanceDashboard />} />
+            <Route path="dashboard" element={<AttendanceDashboard />} />
+            <Route path="profile" element={<TeacherProfile />} />
+            <Route path="timetable" element={<TimetableApp />} />
+            <Route path="markattendence" element={<MarkAttendancePage />} />
+          </Route>
         </Route>
 
-        {/* ========== STUDENT DASHBOARD (PBRANCH) ========== */}
-
-        {/* main home */}
-        <Route
-          path="/student-dashboard"
-          element={
-            <PbranchLayout>
-              <DashboardHome />
-            </PbranchLayout>
-          }
-        />
-
-        {/* other static pages */}
-        <Route
-          path="/student-dashboard/profile"
-          element={
-            <PbranchLayout>
-              <StudentProfile />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-          path="/student-dashboard/attendance-overview"
-          element={
-            <PbranchLayout>
-              <AttendanceOverview />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-          path="/student-dashboard/subject-wise"
-          element={
-            <PbranchLayout>
-              <SubjectWiseAttendance />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-          path="/student-dashboard/recent-logs"
-          element={
-            <PbranchLayout>
-              <RecentLogsPage />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-          path="/student-dashboard/notifications"
-          element={
-            <PbranchLayout>
-              <NotificationsPage />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-          path="/student-dashboard/leave-requests"
-          element={
-            <PbranchLayout>
-              <LeaveRequestsPage />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-          path="/student-dashboard/settings"
-          element={
-            <PbranchLayout>
-              <SettingsPage />
-            </PbranchLayout>
-          }
-        />
-
-        <Route
-       path="/student-dashboard/feedback"
-     element={
-    <PbranchLayout>
-      <FeedbackPage />
-    </PbranchLayout>
-  }
- />
-
-        {/* ======= CHARTS ROUTES (ALL UNDER /student-dashboard/charts) ======= */}
-
-        {/* parent layout: header + 3 clickable cards + <Outlet /> */}
-        <Route
-          path="/student-dashboard/charts"
-          element={
-            <PbranchLayout>
-              <AttendanceChartsLayout />
-            </PbranchLayout>
-          }
-        >
-          {/* default: when user goes to /student-dashboard/charts */}
-          <Route index element={<SubjectChartsPage />} />
-
-          {/* /student-dashboard/charts/subject-wise */}
-          <Route path="subject-wise" element={<SubjectChartsPage />} />
-
-          {/* /student-dashboard/charts/distribution */}
-          <Route path="distribution" element={<DistributionChartsPage />} />
-
-          {/* /student-dashboard/charts/trend */}
-          <Route path="trend" element={<TrendChartsPage />} />
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<AdminDashboard />}>
+            <Route index element={<ManageTeachers />} />
+            <Route path="teachers" element={<ManageTeachers />} />
+            <Route path="students" element={<ManageStudents />} />
+            <Route path="classes" element={<ManageClasses />} />
+            <Route path="subjects" element={<ManageSubjects />} />
+            <Route path="offerings" element={<ManageOfferings />} />
+            <Route path="enrollments" element={<ManageEnrollments />} />
+          </Route>
         </Route>
 
-        {/* Misc */}
-        <Route path="/navbar" element={<Navbar />} />
+
+
+        {/* Protected Student Routes */}
+     <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+          <Route path="/student" element={<StudentDashboardLayout />}>
+            <Route index element={<StudentDashboard />} />
+            <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="courses" element={<StudentCourses />} />
+            <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="grades" element={<StudentGrades />} />
+            <Route path="schedule" element={<StudentSchedule />} />
+            <Route path="profile" element={<StudentProfile />} />
+          </Route>
+          </Route>
+        
+
+        {/* Unauthorized Page */}
+        <Route path="/unauthorized" element={<Unauthorised />} />
       </Routes>
     </BrowserRouter>
   );
 };
 
-export default App;
+
+export default App

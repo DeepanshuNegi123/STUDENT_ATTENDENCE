@@ -50,13 +50,13 @@ return (
 
     // loop={true}
     // autoplay={{ delay: 3000  }}
-    // onReachEnd={()=>{
+    onReachEnd={()=>{
 
-    //   setTimeout(()=>{
-    //      navigate('/login');
-    //   }, 1500)
+      setTimeout(()=>{
+         navigate('/login');
+      }, 1500)
      
-    // }}
+    }}
 
 
     className="h-full w-full">
@@ -104,7 +104,13 @@ return (
     <SwiperSlide>
       <div className="h-screen flex items-center justify-center bg-green-500 text-white text-4xl font-bold">
         Learn About Our Features
-      </div>
+      </div>  
+      <div className="fixed bottom-10 sm:bottom-16 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 items-center">
+
+    <Slidebutton text="Next" css=" text-white font-bold px-6 py-2 rounded-md text-2xl sm:text-3xl" />
+    <Skipbutton  onClick={()=>{navigate('/login')}} text="Skip..." css="text-black font-bold p-1 text-lg sm:text-2xl" />
+
+  </div>
     </SwiperSlide>
 
 
